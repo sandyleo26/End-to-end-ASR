@@ -10,6 +10,7 @@ from keras.models import Model
 from keras.layers import (Input, Lambda)
 from keras.optimizers import SGD
 from keras.callbacks import ModelCheckpoint   
+from keras.callbacks import EarlyStopping   
 import os
 
 def ctc_lambda_func(args):
@@ -68,12 +69,13 @@ def train_model(input_to_softmax,
         os.makedirs('results')
 
     # add checkpointer
-    checkpointer = ModelCheckpoint(filepath='results/'+save_model_path, verbose=0)
+    checkpointer = ModelCheckpoint(filepath='results/'+save_model_path, save_best_only=True, verbose=1)
+    earlystopper = EarlyStopping(verbose=1)
 
     # train the model
     hist = model.fit_generator(generator=audio_gen.next_train(), steps_per_epoch=steps_per_epoch,
         epochs=epochs, validation_data=audio_gen.next_valid(), validation_steps=validation_steps,
-        callbacks=[checkpointer], verbose=verbose)
+        callbacks=[checkpointer, earlystopper], verbose=verbose)
 
     # save model loss
     with open('results/'+pickle_path, 'wb') as f:
